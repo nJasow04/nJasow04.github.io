@@ -122,12 +122,23 @@
         
         console.log(`Slideshow ${slideshowId}: Found ${slides.length} slides and ${dots.length} dots`);
 
+        // Ensure number labels are correct and up to date
+        for (let i = 0; i < slides.length; i++) {
+            let numberEl = slides[i].querySelector(".numbertext");
+            if (!numberEl) {
+                numberEl = document.createElement("div");
+                numberEl.className = "numbertext";
+                slides[i].insertBefore(numberEl, slides[i].firstChild);
+            }
+            numberEl.textContent = `${i + 1} / ${slides.length}`;
+        }
+
         if (!slideIndices[slideshowId]) {
             slideIndices[slideshowId] = 1;
         }
         
-        if (n > slides.length) { slideIndices[slideshowId] = 1 }
-        if (n < 1) { slideIndices[slideshowId] = slides.length }
+        if (n > slides.length) { slideIndices[slideshowId] = 1; }
+        if (n < 1) { slideIndices[slideshowId] = slides.length; }
 
         console.log(`Current slide index for ${slideshowId}: ${slideIndices[slideshowId]}`);
         
@@ -135,9 +146,9 @@
             slides[i].style.display = "none";
         }
         
-            // Only try to update dots if they exist
+        // Only try to update dots if they exist
         if (dots.length > 0) {
-            console.log(`Updating dots for slideshow ${slideshowId}`)
+            console.log(`Updating dots for slideshow ${slideshowId}`);
             for (let i = 0; i < dots.length; i++) {
                 console.log(`Dot ${i} before: ${dots[i].className}`);
                 dots[i].className = dots[i].className.replace(" dot-active", "");
@@ -148,7 +159,7 @@
             console.log(`Active dot class: ${dots[slideIndices[slideshowId] - 1].className}`);
 
         } else {
-            console.log(`No dots found for lol slideshow ${slideshowId}`);
+            console.log(`No dots found for slideshow ${slideshowId}`);
         }
         
         slides[slideIndices[slideshowId] - 1].style.display = "block";
@@ -163,12 +174,59 @@
     }
 
     // Initialize all slideshows
+    function createDotsForSlideshow(slideshowId, slideshowElement) {
+        // Find the closest parent with class 'project-detail'
+        let projectDetail = slideshowElement.closest('.project-detail');
+        if (!projectDetail) {
+            return;
+        }
+
+        // Find the dots container for this slideshow
+        const dotsContainer = projectDetail.querySelector(`[data-dots-for="${slideshowId}"]`);
+        if (!dotsContainer) {
+            return;
+        }
+
+        // Clear any existing dots
+        dotsContainer.innerHTML = "";
+
+        const slides = slideshowElement.getElementsByClassName("mySlides");
+
+        for (let i = 0; i < slides.length; i++) {
+            const dot = document.createElement("span");
+            dot.className = "dot";
+            dot.addEventListener("click", () => {
+                currentSlide(i + 1, slideshowId);
+            });
+            dotsContainer.appendChild(dot);
+        }
+    }
+
     function initSlideshows() {
         console.log("Initializing slideshows"); // Debug log
         let slideshows = document.getElementsByClassName("slideshow-container");
         for (let i = 0; i < slideshows.length; i++) {
             let slideshowId = slideshows[i].id.split("-")[1];
             console.log("Initializing slideshow:", slideshowId); // Debug log
+
+            // Wire up prev/next buttons automatically
+            const prevButton = slideshows[i].querySelector(".prev");
+            const nextButton = slideshows[i].querySelector(".next");
+
+            if (prevButton) {
+                prevButton.addEventListener("click", () => {
+                    plusSlides(-1, slideshowId);
+                });
+            }
+
+            if (nextButton) {
+                nextButton.addEventListener("click", () => {
+                    plusSlides(1, slideshowId);
+                });
+            }
+
+            // Create dots and initialize slideshow
+            createDotsForSlideshow(slideshowId, slideshows[i]);
             showSlides(1, slideshowId);
         }
     }
